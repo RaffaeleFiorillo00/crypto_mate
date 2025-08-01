@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../models/market_data_model.dart';
 
 class ApiService {
   static const String _baseUrl = 'https://api.coingecko.com/api/v3';
@@ -100,6 +101,46 @@ class ApiService {
     } catch (e) {
       print('Error fetching supported coins: $e');
       return [];
+    }
+  }
+
+  // Get market data for top cryptocurrencies
+  Future<List<MarketDataModel>> fetchTopMarketData({int perPage = 50}) async {
+    try {
+      String url = '$_baseUrl/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=$perPage&page=1&sparkline=false&locale=en';
+      
+      final response = await http.get(Uri.parse(url));
+      
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        return data.map((json) => MarketDataModel.fromJson(json)).toList();
+      } else {
+        print('Error fetching market data: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching market data: $e');
+      return [];
+    }
+  }
+
+  // Get detailed market data for a specific cryptocurrency
+  Future<MarketDataModel?> fetchCryptoMarketData(String id) async {
+    try {
+      String url = '$_baseUrl/coins/$id?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false';
+      
+      final response = await http.get(Uri.parse(url));
+      
+      if (response.statusCode == 200) {
+        Map<String, dynamic> data = json.decode(response.body);
+        return MarketDataModel.fromJson(data);
+      } else {
+        print('Error fetching crypto market data: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error fetching crypto market data: $e');
+      return null;
     }
   }
 
